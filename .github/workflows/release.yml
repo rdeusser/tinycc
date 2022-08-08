@@ -55,7 +55,7 @@ jobs:
         uses: softprops/action-gh-release@v0.1.14
         with:
           body_path: tinycc/CHANGELOG.md
-          tag_name: ${{ steps.release-format.outputs.output }}
+          tag_name: release-${{ steps.release-format.outputs.output }}
           draft: false
           prerelease: false
           files: tinycc.tar.gz
