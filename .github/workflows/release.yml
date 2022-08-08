@@ -1,0 +1,63 @@
+name: Release
+
+on:
+  push:
+    paths:
+      - "tinycc"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Build
+        run: |
+          cd tinycc
+          ./configure
+          make
+          make test
+          make clean
+
+      - name: Create tinycc.tar.gz
+        run: |
+          tar -czvf tinycc.tar.gz tinycc
+
+      - name: Get tag and release format
+        id: release-format
+        run: |
+          cd tinycc
+          echo ::set-output name=output::$(git log -1 --pretty=format:'%as')
+
+      - name: Generate changelog
+        run: |
+          cd tinycc
+          git fetch --tags
+          latest_tag=$(git tag --sort=creatordate | tail -1)
+          latest_commit=$(git log -1 --pretty=format:'%h')
+          latest_commit_date=$(git log -1 --pretty=format:'%as')
+          printf "# release-${latest_commit_date}\n" >> CHANGELOG.md
+          printf "### Changes since latest tag (${latest_tag})\n\n" >> CHANGELOG.md
+          git log ${latest_commit}...${latest_tag} --pretty=format:'*  %s [[Commit](https://repo.or.cz/tinycc.git/commit/%H)]' | grep -v Merge >> CHANGELOG.md
+
+      - name: Truncate changelog
+        uses: rdeusser/action-truncate-file@v1
+        with:
+          file: tinycc/CHANGELOG.md
+          character_limit: 100000
+          remove_last_line: true
+
+      - name: Create release
+        uses: softprops/action-gh-release@v0.1.14
+        with:
+          body_path: tinycc/CHANGELOG.md
+          tag_name: ${{ steps.release-format.outputs.output }}
+          draft: false
+          prerelease: false
+          files: tinycc.tar.gz
+          repository: rdeusser/tinycc
+          generate_release_notes: false
