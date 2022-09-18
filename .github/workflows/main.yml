@@ -12,6 +12,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
+          ref: mob
           submodules: true
 
       - name: Sync tinycc
