@@ -20,7 +20,7 @@ jobs:
       - name: Update submodules and sync tinycc
         run: |
           git submodule sync
-          git submodule update --remote
+          git submodule update --init --remote
 
       - name: Build
         run: |
